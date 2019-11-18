@@ -1,4 +1,32 @@
-<!DOCTYPE html>
+const colors = {
+  green: {
+    wrapperBackground: "#E6E1C3",
+    headerBackground: "#C1C72C",
+    headerColor: "black",
+    photoBorderColor: "black"
+  },
+  blue: {
+    wrapperBackground: "#5F64D3",
+    headerBackground: "#26175A",
+    headerColor: "white",
+    photoBorderColor: "#73448C"
+  },
+  pink: {
+    wrapperBackground: "#879CDF",
+    headerBackground: "#FF8374",
+    headerColor: "white",
+    photoBorderColor: "#FEE24C"
+  },
+  red: {
+    wrapperBackground: "#DE9967",
+    headerBackground: "#870603",
+    headerColor: "white",
+    photoBorderColor: "white"
+  }
+};
+
+function generateHTML(data) {
+  return `<!DOCTYPE html>
 <html lang="en">
    <head>
       <meta charset="UTF-8" />
@@ -11,6 +39,7 @@
           @page {
             margin: 0;
           }
+         
          *,
          *::after,
          *::before {
@@ -24,7 +53,7 @@
          height: 100%;
          }
          .wrapper {
-         background-color: #E6E1C3;
+         background-color: ${colors[data.color].wrapperBackground};
          padding-top: 100px;
          }
          body {
@@ -66,8 +95,8 @@
          display: flex;
          justify-content: center;
          flex-wrap: wrap;
-         background-color: #C1C72C;
-         color: black;
+         background-color: ${colors[data.color].headerBackground};
+         color: ${colors[data.color].headerColor};
          padding: 10px;
          width: 95%;
          border-radius: 6px;
@@ -78,7 +107,7 @@
          border-radius: 50%;
          object-fit: cover;
          margin-top: -75px;
-         border: 6px solid #black;
+         border: 6px solid ${colors[data.color].photoBorderColor};
          box-shadow: rgba(0, 0, 0, 0.3) 4px 1px 20px 4px;
          }
          .photo-header h1, .photo-header h2 {
@@ -121,8 +150,8 @@
          .card {
            padding: 20px;
            border-radius: 6px;
-           background-color: #C1C72C;
-           color: black;
+           background-color: ${colors[data.color].headerBackground};
+           color: ${colors[data.color].headerColor};
            margin: 20px;
          }
          
@@ -137,13 +166,62 @@
          font-weight: bold;
          }
 
-         @media print { 
+          
           body { 
             zoom: .75; 
           } 
-         }
+         
       </style>
-      <body>
-      <div>Michael Hrivnak, https://github.com/michaelhrivnak</div>
-      </body>
-      </html>
+      </head>
+    <body>      
+    <div class="wrapper">
+        <div class="photo-header">
+            <img alt="" src="${data.pic}">
+            <h1>Hi!</h1>
+            <h2>My Name is ${data.name}!</h2>
+            <h5>Currently @ ${data.company}</h5>
+            <div class="links-nav">
+                <a class="nav-link" href="https://google.com/maps/place/${data.location}"><i class="fas fa-location-arrow"></i>&nbsp;${data.location}</a>
+                <a class="nav-link" href="${data.url}"><i class="fab fa-github"></i>&nbsp;GitHub</a>
+                <a class="nav-link" href="${data.blog}"><i class="fas fa-rss"></i>&nbsp;Blog</a>
+            </div>
+        </div>
+        
+        <main>          
+          <div class="container">                 
+                <div class="row">
+                    <h3 class="col">${data.bio}</h3>
+                </div>
+                <div class="row">
+                    <div class="card col">
+                        <h3>Public Respositories</h3>
+                        <h4>${data.repos}</h4>
+                    </div>
+                    <div class="card col">
+                        <h3>Followers</h3>
+                        <h4>${data.followers}</h4>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="card col">
+                        <h3>GitHub Stars</h3>
+                        <h4>${data.stars}</h4>
+                    </div>
+                    <div class="card col">
+                        <h3>Following</h3>
+                        <h4>${data.following}</h4>
+                    </div>
+                </div>
+                
+            </div>
+        </main>
+    </div>
+      
+    </body>
+</html>`
+        }
+
+module.exports = {
+  colors: colors,
+  generateHTML: generateHTML
+};

@@ -26,10 +26,7 @@
   "homepage": "https://github.com/michaelhrivnak/developer-profile-generator#readme",
   "dependencies": {
     "axios": "^0.19.0",
-    "html-pdf": "^2.2.0",
-    "html2canvas": "^1.0.0-rc.5",
     "inquirer": "^7.0.0",
-    "jspdf": "^1.5.3",
-    "phantomjs-prebuilt": "^2.1.16"
+    "puppeteer": "^2.0.0"
   }
 }
