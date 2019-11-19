@@ -5,8 +5,8 @@ const generateHTML = require("./assets/js/generateHTML.js");
 const util = require('util');
 const Puppeteer = require('puppeteer');  
 
-
 const writeFileAsync = util.promisify(fs.writeFile);
+const rmFileAsync = util.promisify(fs.unlink);
 
 const questions = [
     {
@@ -22,7 +22,7 @@ const questions = [
 ];
 
 async function writeToFile(fileName, data) {
-    
+
     try{
         let pdfPage = await pdf(data);
         writeFileAsync(fileName,pdfPage).then(err =>{
@@ -34,71 +34,54 @@ async function writeToFile(fileName, data) {
     }catch (error){
         console.log(error);
     }
-
-    // pdf.create(data).toFile(fileName, function(err, res) {
-    //     if (err) return console.log(err);
-    //     console.log(res); // { filename: '/app/businesscard.pdf' }
-    // });
-    
-    // writeFileAsync(fileName,data,"binary").then(err=>{
-    //     if(err){
-    //         console.log(err);
-    //     }
-    //     console.log("success");
-    // });
-    
-    //(fileName,JSON.stringify(data),'binary');
 }
 
 function init() {  
     let colour ="";
+    let username = "";
+    let stars = 0;
     inquirer
     .prompt(questions)
     .then( answers => {
         
-        const {username} = answers;
+        username = answers.username;
         colour = answers.colour;
         if (generateHTML.colors.hasOwnProperty(colour)){       
-            const queryUrl = `https://api.github.com/users/${username}`
-            return axios.get(queryUrl);
+            //const queryUrl = `https://api.github.com/users/${username}/repos`; //repos for stars for others
+            const queryUrl = `https://api.github.com/users/${username}/starred?per_page=1`;
+            return axios.head(queryUrl);
         }else{
             throw Error("not a valid colour");
-        }
-        //return {result: axious.get(queryUrl), colour: colour}
-    })        
-    .then( ({data}) =>{
-        const {html_url} = data;
-        const {name} = data;
-        const {location} = data;
-        const {public_repos} = data;
-        const {followers} = data;
-        const {avatar_url} = data;
-        const {blog} = data;
-        const {following} = data;
-        const {company} = data;
-        const {bio} = data;
-        const htmlData = {
-            url: html_url,
-            color: colour,
-            name: name,
-            location: location,
-            repos: public_repos,
-            followers: followers,
-            following: following,
-            pic: avatar_url,
-            blog: blog,
-            company: company,
-            bio: bio,
-            stars: 120 //figure out stars?
-        }
-        const htmlpage = generateHTML.generateHTML(htmlData);
-
-        writeToFile('test.pdf',htmlpage);
-       
+        }        
     })
+    .then( data =>{   
+        
+        return Promise.resolve(getStarredCount(data));   
+        //return Promise.resolve(countStars(data));
+    })    
+    .then(data =>{
+        stars = data;
+        const queryUrl = `https://api.github.com/users/${username}`;
+        return axios.get(queryUrl);
+        //return Promise.resolve({gitUser:axios.get(queryUrl),stars:data});
+    })
+    .then(({data})=>{
+        return Promise.resolve(parseGitUser(data,colour,stars));
+    })
+    .then(htmlData=>{
+        return Promise.resolve({html:generateHTML.generateHTML(htmlData),name:htmlData.name});
+    })   
+    .then( ({html,name}) =>{
+        return writeToFile(`${name}.pdf`,html);
+    })
+    .then(function(){
+        return rmFileAsync('./output.png', err=>{if(err)console.log(err)})
+    })    
     .catch(err =>{
         console.log(err);
     });
+
+   
 }
 
 async function pdf(html) {   
@@ -106,12 +89,49 @@ async function pdf(html) {
     const browser = await Puppeteer.launch();
     const page = await browser.newPage();
     await page.setContent(html);
-    //await page.goto('data:text/html;charset=UTF-8,' + html, {waitUntil: 'networkidle0'});
     await page.emulateMedia("screen");
     await page.screenshot({ path: 'output.png' });
     const pdf = await page.pdf();
     browser.close();
     return pdf
+}
+
+function countStars(data){ 
+           
+        let count = 0;
+        data.forEach(element =>{
+            count += element.stargazers_count;
+            
+        });
+        
+        return count;     
+}
+function getStarredCount(data){
+    let linkStr = data.headers.link;
+    if(!linkStr){
+        return 0;
+    }    
+    return parseInt(linkStr.match(/\d+(?=(>; rel="last"))/g)[0])
+    
+}
+
+function parseGitUser(data,colour,stars){
+    
+    return {
+        url: data.html_url,
+        color: colour,
+        name: data.name,
+        location: data.location,
+        repos: data.public_repos,
+        followers: data.followers,
+        following: data.following,
+        pic: data.avatar_url,
+        blog: data.blog,
+        company: data.company,
+        bio: data.bio,
+        username:data.login,
+        stars:stars
+    }
 }
 
 init();
