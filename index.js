@@ -47,17 +47,17 @@ function init() {
         username = answers.username;
         colour = answers.colour;
         if (generateHTML.colors.hasOwnProperty(colour)){       
-            //const queryUrl = `https://api.github.com/users/${username}/repos`; //repos for stars for others
-            const queryUrl = `https://api.github.com/users/${username}/starred?per_page=1`;
-            return axios.head(queryUrl);
+            const queryUrl = `https://api.github.com/users/${username}/repos`; //repos for stars for others
+            return axios.get(queryUrl);
+            //const queryUrl = `https://api.github.com/users/${username}/starred?per_page=1`;
+            //return axios.hea(queryUrl);
         }else{
             throw Error("not a valid colour");
         }        
     })
-    .then( data =>{   
-        
-        return Promise.resolve(getStarredCount(data));   
-        //return Promise.resolve(countStars(data));
+    .then( ({data}) =>{          
+        //return Promise.resolve(getStarredCount(data));   
+        return Promise.resolve(countStars(data));
     })    
     .then(data =>{
         stars = data;
@@ -72,7 +72,7 @@ function init() {
         return Promise.resolve({html:generateHTML.generateHTML(htmlData),name:htmlData.name});
     })   
     .then( ({html,name}) =>{
-        return writeToFile(`${name}.pdf`,html);
+        return writeToFile(`${name.replace(/ /g,"_")}.pdf`,html);
     })
     .then(function(){
         return rmFileAsync('./output.png', err=>{if(err)console.log(err)})
@@ -97,7 +97,7 @@ async function pdf(html) {
 }
 
 function countStars(data){ 
-           
+          
         let count = 0;
         data.forEach(element =>{
             count += element.stargazers_count;
